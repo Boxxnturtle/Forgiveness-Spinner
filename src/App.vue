@@ -1,59 +1,14 @@
-<script setup>
-import { ref } from 'vue'
-import DilemmaForm from './components/DilemmaForm.vue'
-import FatedWheel from './components/FatedWheel.vue'
-import ReflectionCard from './components/ReflectionCard.vue'
-//Links to the components that are being used in the main App.vue file.
-
-const userDilemma = ref('')
-const randomOutcome = ref('')
-const userReflection = ref('')
-const isSpinning = ref(false)
-const wheelRotation = ref(0) //Tracks the degrees
-const outcomeOptions = ['Forgive Them', 'Do not Forgive Them']
-
-//-- Logic for wheel spin --
-
-function spinTheWheel() {
-  if (!userDilemma.value.trim()) {
-    alert('Please enter your dilemma before spinning the wheel.')
-    return
-  }
-
-  isSpinning.value = true
-  randomOutcome.value = ''
-
-  //Make Wheel
-  const randomIndex = Math.floor(Math.random() * outcomeOptions.length)
-  const snapDegrees = randomIndex === 0 ? 90 : 270
-  const fullSpins = 5 * 360 // 5 full spins for dramatic effect
-  wheelRotation.value += fullSpins + snapDegrees
-
-  // Simulate spinning the wheel
-  setTimeout(() => {
-    randomOutcome.value = outcomeOptions[randomIndex]
-    isSpinning.value = false
-  }, 3000) // Simulate a spinning delay
-}
-</script>
-
 <template>
   <main class="app-container">
-    <h1><b>Forgiveness Dilemma Spinner</b></h1>
-    <p>Uncover your true feelings...</p>
+    <header class="app-header">
+      <h1><b>Forgiveness Dilemma Spinner</b></h1>
 
-    <!-- Dilemma Form Section -->
-    <DilemmaForm v-model="userDilemma" :isSpinning="isSpinning" @spin="spinTheWheel" />
-
-    <!-- Wheel Section -->
-    <FatedWheel :wheelRotation="wheelRotation" />
-
-    <!-- Screen reader announcement -->
-    <div aria-live="polite" class="sr-only">
-      <h2 v-if="randomOutcome">The wheel has landed on: {{ randomOutcome }}</h2>
-    </div>
-    <!--Reflection Card Section -->
-    <ReflectionCard v-if="randomOutcome" :outcome="randomOutcome" v-model="userReflection" />
+      <nav class="nav-links">
+        <router-link to="/oracle">Consult the Wheel</router-link>
+        <router-link to="/journal">Previous Fates</router-link>
+      </nav>
+    </header>
+    <router-view />
   </main>
 </template>
 
@@ -72,15 +27,34 @@ h2,
 p {
   color: #d5c67a;
 }
-/*Making the button focus different from the rest to make it clear that the tab key is hovered over. */
-:deep(button:focus-visible) {
-  outline: 2px solid #d5c67a;
-  outline-offset: 2px;
+
+.nav-links {
+  margin-top: 20px;
+}
+.nav-links a {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  padding: 8px 16px;
+  margin: 0 5px;
+  border-radius: 5px;
+  transition: all 0.2s;
+  background-color: #06a77d;
+}
+.nav-links a.router-link-exact-active {
+  background-color: #06a77d;
+  color: white;
 }
 
+.nav-links a:hover {
+  background-color: #058c69;
+  color: white;
+}
+
+:deep(button:focus-visible),
 :deep(textarea:focus-visible),
 :deep(input:focus-visible) {
-  outline: 2px solid #06a77d;
-  outline-offset: 2px;
+  border-color: 2px solid #d5c67a;
+  outline-offset: 0px;
 }
 </style>

@@ -1,23 +1,37 @@
 <script setup>
-defineProps({
-  outcome: String,
-  modelValue: String,
+const emit = defineEmits(['update:modelValue', 'save-complete'])
+const props = defineProps({
+  outcome: {
+    type: String,
+    required: true,
+  },
+  modelValue: {
+    type: String,
+    default: '',
+  },
 })
-defineEmits(['update:modelValue'])
+const saveReflection = () => {
+  // Emit the save event to the parent component
+  console.log('Reflection saved:', props.modelValue)
+  emit('save-complete')
+}
 </script>
 
 <template>
   <div class="reflection-card">
-    <h2>How does seeing "{{ outcome }}" make you feel?</h2>
+    <h2 class="outcome-text">How does seeing "{{ outcome }}" make you feel?</h2>
     <p>
       Take a moment to reflect on your feelings and thoughts. Are you angry, sad, or something else?
       Jot it down below!
     </p>
     <textarea
+      id="reflection-text"
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
       placeholder="Reflect on your feelings here..."
+      rows="4"
     ></textarea>
+    <button @click="saveReflection" class="save-btn">Save Reflection</button>
   </div>
 </template>
 
@@ -40,10 +54,45 @@ p {
 }
 textarea {
   width: 100%;
-  height: 100px;
-  margin-top: 10px;
+  margin-top: 1rem;
   padding: 10px;
   font-size: 16px;
   border-radius: 8px;
+}
+
+.reflection-text:focus {
+  outline: none;
+  box-shadow: 0 0 5px #d5c67a;
+  border-color: #d5c67a;
+}
+
+#reflection-text {
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 6px;
+  border: 4px solid #06a77d;
+  background-color: white;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  resize: vertical;
+  font-size: 16px;
+  font-family: inherit;
+}
+.save-btn {
+  padding: 10px 20px;
+  background-color: #06a77d;
+
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2;
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1rem;
+}
+.save-btn:hover {
+  background-color: #058c69;
+  color: white;
 }
 </style>
