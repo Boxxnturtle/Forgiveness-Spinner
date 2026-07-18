@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import FatedWheel from '@/components/FatedWheel.vue'
 import ReflectionCard from '@/components/ReflectionCard.vue'
 import { useReflectionStore } from '@/stores/journal'
@@ -9,19 +9,58 @@ const userDilemma = ref('')
 const randomOutcome = ref('')
 const UserReflection = ref('')
 const showToast = ref(false)
-
+const inlineError = ref('')
+const isSaving = ref(false)
+const saveError = ref(false)
+const wheelRef = ref(null)
+const resetCounter = ref(0) // Track the number of times the wheel has been reset
 const handleSpinCompleted = (result) => {
   randomOutcome.value = result
 }
 
-const handleSaveReflection = () => {
-  store.addEntry(userDilemma.value, randomOutcome.value, UserReflection.value)
-  console.log('Current Store data:', store.reflections)
-  showToast.value = true
-  setTimeout(() => {
-    showToast.value = false
-  }, 3000)
+const handleValidationError = (msg) => {
+  inlineError.value = msg
 }
+
+const handleSaveReflection = () => {
+  isSaving.value = true
+  saveError.value = false
+  //Simulate API Network Request
+  setTimeout(() => {
+    if (Math.random() < 0.3) {
+      isSaving.value = false
+      saveError.value = true //Triggers alert banner in RefCard
+    } else {
+      store.addEntry(userDilemma.value, randomOutcome.value, UserReflection.value)
+      console.log('Current Store data:', store.reflections)
+      isSaving.value = false
+      showToast.value = true
+      setTimeout(() => {
+        showToast.value = false
+      }, 3000)
+    }
+  }, 1500)
+}
+
+const handleSpinAgain = () => {
+  randomOutcome.value = ''
+  UserReflection.value = ''
+  userDilemma.value = ''
+  localStorage.removeItem('draft-reflection')
+  resetCounter.value++ // Increment the reset counter
+}
+
+UserReflection.value = localStorage.getItem('draft-reflection') || ''
+
+watch(UserReflection, (newValue) => {
+  localStorage.setItem('draft-relfection', newValue)
+})
+
+watch(userDilemma, () => {
+  if (userDilemma.value.trim() !== '') {
+    inlineError.value = ''
+  }
+})
 </script>
 
 <template>
@@ -36,6 +75,7 @@ const handleSaveReflection = () => {
         aria-label="Enter your dilemma"
         rows="3"
       ></textarea>
+      <span v-if="inlineError" class="error-text" role="alert">{{ inlineError }}</span>
     </div>
 
     <!--The Wheel-->
@@ -43,14 +83,20 @@ const handleSaveReflection = () => {
       :dilemma="userDilemma"
       :options="['Forgive', 'Do Not Forgive']"
       @spin-complete="handleSpinCompleted"
+      ref="wheelRef"
+      :reset-counter="resetCounter"
+      @validation-error="handleValidationError"
     />
 
     <!--The Reflection Card-->
     <ReflectionCard
       v-if="randomOutcome"
       :outcome="randomOutcome"
+      :is-saving="isSaving"
+      :save-error="saveError"
       v-model="UserReflection"
       @save-complete="handleSaveReflection"
+      @spin-again="handleSpinAgain"
     />
     <div v-if="showToast" class="toast-notification" role="alert" aria-live="assertive">
       Reflection saved successfully!
@@ -59,6 +105,13 @@ const handleSaveReflection = () => {
 </template>
 
 <style scoped>
+.error-text {
+  color: #ff6b6b;
+  margin-top: 8px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
 .oracle-view {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,5 @@
 <script setup>
-const emit = defineEmits(['update:modelValue', 'save-complete'])
+const emit = defineEmits(['update:modelValue', 'save-complete', 'spin-again'])
 const props = defineProps({
   outcome: {
     type: String,
@@ -9,7 +9,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  isSaving: { type: Boolean, default: false },
+  saveError: { type: Boolean, default: false },
 })
+
 const saveReflection = () => {
   // Emit the save event to the parent component
   console.log('Reflection saved:', props.modelValue)
@@ -19,6 +22,9 @@ const saveReflection = () => {
 
 <template>
   <div class="reflection-card">
+    <div v-if="saveError" class="alert-banner" role="alert" aria-live="assertive">
+      <strong> Connection Error:</strong> Unable to save your reflection. Please try again.
+    </div>
     <h2 class="outcome-text">How does seeing "{{ outcome }}" make you feel?</h2>
     <p>
       Take a moment to reflect on your feelings and thoughts. Are you angry, sad, or something else?
@@ -31,11 +37,35 @@ const saveReflection = () => {
       placeholder="Reflect on your feelings here..."
       rows="4"
     ></textarea>
-    <button @click="saveReflection" class="save-btn">Save Reflection</button>
+    <div class="action-buttons">
+      <button @click="saveReflection" class="save-btn" :disabled="isSaving">
+        {{ isSaving ? 'Saving...' : saveError ? 'Retry Save' : 'Save Reflection' }}
+      </button>
+      <button @click="$emit('spin-again')" class="reset-btn" :disabled="isSaving">
+        Spin Again
+      </button>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.alert-banner {
+  background-color: #d9534f;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+  border: 2px solid #c9302c;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
 .reflection-card {
   background-color: #005377;
   padding: 20px;
@@ -82,7 +112,6 @@ textarea {
 .save-btn {
   padding: 10px 20px;
   background-color: #06a77d;
-
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -92,6 +121,22 @@ textarea {
   font-size: 1rem;
 }
 .save-btn:hover {
+  background-color: #058c69;
+  color: white;
+}
+
+.reset-btn {
+  padding: 10px 20px;
+  background-color: #06a77d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2;
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1rem;
+}
+.reset-btn:hover {
   background-color: #058c69;
   color: white;
 }

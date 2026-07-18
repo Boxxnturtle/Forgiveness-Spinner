@@ -8,7 +8,9 @@
         <router-link to="/journal">Previous Fates</router-link>
       </nav>
     </header>
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <keep-alive> <component :is="Component" /> </keep-alive>
+    </router-view>
   </main>
 </template>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   options: {
@@ -10,18 +10,44 @@ const props = defineProps({
     type: String,
     default: '',
   },
+
+  resetCounter: {
+    type: Number,
+    default: 0,
+  },
 })
 
 const emit = defineEmits(['spin-complete'])
 const isSpinning = ref(false)
 const currentRotation = ref(0)
 const resultText = ref('')
+const hasSpun = ref(false) // Track if the wheel has been spun at least once
+const buttonText = computed(() => {
+  if (isSpinning.value) return 'Spinning...'
+  if (hasSpun.value) return 'Fate Already Decided'
+  return 'Spin the Wheel'
+})
+
+const isButtonDisabled = computed(() => {
+  return isSpinning.value || hasSpun.value
+})
+
+watch(
+  () => props.resetCounter,
+  () => {
+    hasSpun.value = false
+    resultText.value = ''
+  },
+)
 
 const spinTheWheel = () => {
+  if (isButtonDisabled.value) return
+
   if (!props.dilemma || props.dilemma.trim() === '') {
-    alert('Please enter your dilemma first!')
+    emit('validation-error', 'Please enter your dilemma before spinning!')
     return
   }
+
   if (isSpinning.value) return
   isSpinning.value = true
   resultText.value = ''
@@ -34,9 +60,10 @@ const spinTheWheel = () => {
 
   setTimeout(() => {
     isSpinning.value = false
+    hasSpun.value = true
     resultText.value = props.options[outcomeIndex]
     emit('spin-complete', resultText.value)
-  }, 3000) // Match the CSS transition duration
+  }, 3000) // Match the CSS transition duration and Spin Button becomes disabled after the first spin
 }
 </script>
 
@@ -54,11 +81,11 @@ const spinTheWheel = () => {
     </div>
     <button
       @click="spinTheWheel"
-      :disabled="isSpinning"
+      :disabled="isButtonDisabled"
       class="spin-button"
       :aria-label="isSpinning ? 'The wheel is spinning' : 'Spin the wheel'"
     >
-      {{ isSpinning ? 'Spinning...' : 'Spin the Wheel' }}
+      {{ buttonText }}
     </button>
     <p v-if="resultText" aria-live="polite" class="sr-only">The wheel says {{ resultText }}</p>
   </div>
